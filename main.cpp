@@ -5,17 +5,10 @@
 int main() {
     ThreadPool pool(4);
 
-    for(int i = 0; i < 10; i++) {
-        pool.submit(
-            [i]() {
-                std::cout << "tasks: "
-                << i
-                << "thread "
-                << std::this_thread::get_id()
-                << std::endl;
+    auto result = pool.submit([](){
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+        return 100;
+    });
 
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-            });
-    }
-
+    std::cout << result.get() << std::endl;
 }

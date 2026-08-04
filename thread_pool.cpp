@@ -34,11 +34,3 @@ ThreadPool::~ThreadPool() {
         worker.join();
     }
 }
-
-void ThreadPool::submit(std::function<void()> task) {
-    {
-        std::lock_guard<std::mutex> lock(mutex);
-        tasks.push(task);
-    }
-    cv.notify_one();
-}

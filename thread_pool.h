@@ -5,6 +5,7 @@
 #include <functional>
 #include <mutex>
 #include <condition_variable>
+#include <future>
 
 class ThreadPool {
 private:
@@ -20,5 +21,28 @@ public:
     ThreadPool(size_t thread_num);
     ~ThreadPool();
 
-    void submit(std::function<void()> task);
+    template<typename F>
+    auto submit(F&& f);
 };
+
+template<typename F>
+auto ThreadPool::submit(F&& f) {
+        using return_type = std::invoke_result_t<F>;
+
+        auto task = std::make_shared<std::packaged_task<return_type()>>
+            (std::forward<F>(f));
+
+        auto result = task->get_future();
+
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+
+            tasks.emplace(
+                [task]() {
+                (*task)();
+            });
+        }
+        cv.notify_one();
+
+        return result;
+    }
