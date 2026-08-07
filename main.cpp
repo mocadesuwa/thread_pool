@@ -4,7 +4,7 @@
 #include "thread_pool.h"
 
 void test_basic() {
-    ThreadPool pool(4);
+    ThreadPool pool(4, 100);
     std::atomic<int> count{0};
     std::vector<std::future<void>> futures;
 
@@ -22,7 +22,7 @@ void test_basic() {
 }
 
 void test_future() {
-    ThreadPool pool(4);
+    ThreadPool pool(4, 100);
     std::vector<std::future<int>> results;
 
     for(int i = 0; i < 100; i++) {
@@ -40,7 +40,7 @@ void test_future() {
 }
 
 void test_exception() {
-    ThreadPool pool(4);
+    ThreadPool pool(4, 100);
     auto future = pool.submit([]() {
         throw std::runtime_error("task error");
         return 0;
@@ -55,15 +55,17 @@ void test_exception() {
     }
 }
 void test_performance() {
-    ThreadPool pool(4);
+    ThreadPool pool(4, 100);
     std::vector<std::future<void>> results;
 
     auto start = std::chrono::steady_clock::now();
 
     for(int i = 0; i < 8; i++) {
-        pool.submit([]() {
+        results.push_back(
+            pool.submit([]() {
             std::this_thread::sleep_for(std::chrono::seconds(1));
-        });
+        })
+        );
     }
 
     for(auto& result : results) {
@@ -76,7 +78,7 @@ void test_performance() {
 }
 
 void test_concurrency() {
-    ThreadPool pool(4);
+    ThreadPool pool(4, 100);
     std::atomic<int> running{0};
     std::atomic<int> max_running{0};
 
@@ -88,12 +90,12 @@ void test_concurrency() {
                 int current = ++running;
 
                 max_running.store(std::max(max_running.load(), current));
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+                --running;
             }
         ));
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-        --running;
     }
 
     for(auto& f : futures) {
@@ -122,7 +124,7 @@ int main() {
 
     // 测试五 并发线程数
     std::cout << "\n并发线程数" << std::endl;
-
+    test_concurrency();
     return 0;
 }
 
