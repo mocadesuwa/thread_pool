@@ -6,12 +6,13 @@
 #include <mutex>
 #include <condition_variable>
 #include <future>
+#include <type_traits>
 
 class ThreadPool {
 private:
     std::mutex mutex;
     std::condition_variable cv;
-    bool stop;
+    bool stop = false;
 
     //  线程数组
     std::vector<std::thread> workers;
@@ -27,7 +28,7 @@ public:
 
 template<typename F>
 auto ThreadPool::submit(F&& f) {
-        using return_type = std::invoke_result_t<F>;
+        using return_type = std::invoke_result_t<F&&>;
 
         auto task = std::make_shared<std::packaged_task<return_type()>>
             (std::forward<F>(f));
@@ -36,6 +37,10 @@ auto ThreadPool::submit(F&& f) {
 
         {
             std::lock_guard<std::mutex> lock(mutex);
+
+            if(stop) {
+                throw std::runtime_error("ThreadPool stopped");
+            }
 
             tasks.emplace(
                 [task]() {
