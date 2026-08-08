@@ -1,0 +1,25 @@
+add_executable(test_basic
+    test_basic.cpp)
+
+target_link_libraries(
+    test_basic
+    threadpool
+)
+
+add_test(
+    NAME basic
+    COMMAND test_basic
+)
+
+add_executable(test_priority
+    test_priority.cpp)
+
+target_link_libraries(
+    test_priority
+    threadpool
+)
+
+add_test(
+    NAME priority
+    COMMAND test_priority
+)

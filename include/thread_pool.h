@@ -13,18 +13,34 @@
 struct Task {
     std::function<void()> func;
     int priority;
+    size_t id;
+
+    Task() : func(nullptr), priority(0), id(0) {}
+    Task(std::function<void()> f, int p, size_t i) : func(std::move(f)), priority(p), id(i) {}
     void operator()() {
-        func();
+        if(func) {
+            func();
+        }
+    }
+};
+
+struct TaskCompare {
+    bool operator() (
+        const Task& a, const Task& b
+    ) const {
+        return a.priority < b.priority;
     }
 };
 
 
 class ThreadPool {
 private:
-    //  关闭方式
-    enum class StopMode {
-        Graceful,
-        Immediate
+    //  Task生命周期管理
+    enum class TaskState {
+        pending,
+        Running,
+        Finished,
+        Failed
     };
 
     std::mutex mutex;
@@ -36,15 +52,24 @@ private:
     //  线程数组
     std::vector<std::thread> workers;
     //  任务队列
-    std::queue<Task> tasks;
+    std::priority_queue<Task, std::vector<Task>, TaskCompare> tasks;
     //  最大限制
     size_t max_queue_size;
+    //  id记录
+    std::atomic<size_t> task_id{0};
+
 public:
+    //  关闭方式
+    enum class StopMode {
+        Graceful,
+        DiscardPendingTasks
+    };
+
     ThreadPool(size_t thread_num, size_t queue_size);
     ~ThreadPool();
 
     template<typename F>
-    auto submit(F&& f);
+    auto submit(F&& f, int priority = 0);
 
     void shutdown(StopMode mode);
 
@@ -57,8 +82,8 @@ public:
 };
 
 template<typename F>
-auto ThreadPool::submit(F&& f) {
-        using return_type = std::invoke_result_t<F&&>;
+auto ThreadPool::submit(F&& f, int priority) {
+        using return_type = std::invoke_result_t<F>;
 
         auto task = std::make_shared<std::packaged_task<return_type()>>
             (std::forward<F>(f));
@@ -77,8 +102,9 @@ auto ThreadPool::submit(F&& f) {
             }
 
             tasks.emplace([task]() {
-                (*task)();
-            });
+                (*task)();},
+                priority,
+                task_id++);
         }
         not_empty.notify_one();
 
