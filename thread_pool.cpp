@@ -28,17 +28,53 @@ ThreadPool::ThreadPool(size_t thread_num, size_t queue_size) {
 }
 
 ThreadPool::~ThreadPool() {
+    shutdown(StopMode::Graceful);
+}
+
+void ThreadPool::shutdown(StopMode mode) {
     {
         std::lock_guard<std::mutex> lock(mutex);
         stop = true;
+
+        if(mode == StopMode::Immediate) {
+            while(!tasks.empty()) {
+                tasks.pop();
+            }
+        }
     }
 
     not_empty.notify_all();
     not_full.notify_all();
 
-    for(auto& worker : workers) {
-        if (worker.joinable()) {
-            worker.join();
+    if(mode == StopMode::Graceful) {
+        for(auto& worker : workers) {
+            if(worker.joinable()) {
+                worker.join();
+            }
         }
     }
+}
+
+size_t ThreadPool::task_size() {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    return tasks.size();
+}
+
+size_t ThreadPool::thread_size() {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    return workers.size();
+}
+
+bool ThreadPool::empty() {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    return tasks.empty();
+}
+
+bool ThreadPool::full() {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    return tasks.size() >= max_queue_size;
 }

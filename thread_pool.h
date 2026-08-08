@@ -7,18 +7,36 @@
 #include <condition_variable>
 #include <future>
 #include <type_traits>
+#include <atomic>
+
+//  任务包装器
+struct Task {
+    std::function<void()> func;
+    int priority;
+    void operator()() {
+        func();
+    }
+};
+
 
 class ThreadPool {
 private:
+    //  关闭方式
+    enum class StopMode {
+        Graceful,
+        Immediate
+    };
+
     std::mutex mutex;
     std::condition_variable not_full;
     std::condition_variable not_empty;
-    bool stop = false;
+
+    std::atomic<bool> stop = false;
 
     //  线程数组
     std::vector<std::thread> workers;
     //  任务队列
-    std::queue<std::function<void()>> tasks;
+    std::queue<Task> tasks;
     //  最大限制
     size_t max_queue_size;
 public:
@@ -27,6 +45,15 @@ public:
 
     template<typename F>
     auto submit(F&& f);
+
+    void shutdown(StopMode mode);
+
+    //  状态监控
+    size_t task_size();
+    size_t thread_size();
+
+    bool empty();
+    bool full();
 };
 
 template<typename F>

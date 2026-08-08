@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/hao11/Event/thread_pool/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/tp.dir/main.cpp.o -c /home/hao11/Event/thread_pool/main.cpp",
+  "file": "/home/hao11/Event/thread_pool/main.cpp",
+  "output": "/home/hao11/Event/thread_pool/build/CMakeFiles/tp.dir/main.cpp.o"
+},
+{
+  "directory": "/home/hao11/Event/thread_pool/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/tp.dir/thread_pool.cpp.o -c /home/hao11/Event/thread_pool/thread_pool.cpp",
+  "file": "/home/hao11/Event/thread_pool/thread_pool.cpp",
+  "output": "/home/hao11/Event/thread_pool/build/CMakeFiles/tp.dir/thread_pool.cpp.o"
+}
+]
