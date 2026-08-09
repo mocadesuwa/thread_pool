@@ -1,3 +1,4 @@
+#1.
 add_executable(test_basic
     test_basic.cpp)
 
@@ -11,6 +12,7 @@ add_test(
     COMMAND test_basic
 )
 
+#2.
 add_executable(test_priority
     test_priority.cpp)
 
@@ -22,4 +24,18 @@ target_link_libraries(
 add_test(
     NAME priority
     COMMAND test_priority
+)
+
+#3.
+add_executable(test_task_state
+    test_task_state.cpp)
+
+target_link_libraries(
+    test_task_state
+    threadpool
+)
+
+add_test(
+    NAME task_state
+    COMMAND test_task_state
 )

@@ -22,7 +22,22 @@ ThreadPool::ThreadPool(size_t thread_num, size_t queue_size) : max_queue_size(qu
 
                         not_full.notify_one();
                     }
-                    task();
+                    task.control->state.store(
+                        TaskState::Running
+                    );
+
+                    try {
+                        task();
+
+                        task.control->state.store(
+                            TaskState::Finished
+                        );
+                    }
+                    catch(...) {
+                        task.control->state.store(
+                            TaskState::Failed
+                        );
+                    }
                 }
             });
     }
@@ -32,6 +47,7 @@ ThreadPool::~ThreadPool() {
     shutdown(StopMode::Graceful);
 }
 
+// 任务关闭
 void ThreadPool::shutdown(StopMode mode) {
     {
         std::lock_guard<std::mutex> lock(mutex);
@@ -39,6 +55,12 @@ void ThreadPool::shutdown(StopMode mode) {
 
         if(mode == StopMode::DiscardPendingTasks) {
             while(!tasks.empty()) {
+                auto& task = tasks.top();
+
+                task.control->state.store(
+                    TaskState::Cancelled
+                );
+
                 tasks.pop();
             }
         }
@@ -54,6 +76,8 @@ void ThreadPool::shutdown(StopMode mode) {
     }
 }
 
+
+//  状态监控
 size_t ThreadPool::task_size() {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -74,4 +98,21 @@ bool ThreadPool::full() {
     std::lock_guard<std::mutex> lock(mutex);
 
     return tasks.size() >= max_queue_size;
+}
+
+//  状态查询
+TaskState ThreadPool::get_task_state(size_t id) {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    auto it = task_states.find(id);
+
+    if(it == task_states.end()) {
+        throw std::runtime_error("task not found");
+    }
+
+    return it->second->state.load();
+
+
+    // auto control = task_states.at(id);
+    // return control->state.load();
 }

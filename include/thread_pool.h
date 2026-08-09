@@ -2,47 +2,19 @@
 #include <vector>
 #include <thread>
 #include <queue>
-#include <functional>
 #include <mutex>
 #include <condition_variable>
 #include <future>
 #include <type_traits>
-#include <atomic>
+#include <unordered_map>
 
-//  任务包装器
-struct Task {
-    std::function<void()> func;
-    int priority;
-    size_t id;
+#include "task.h"
+#include "task_handle.h"
 
-    Task() : func(nullptr), priority(0), id(0) {}
-    Task(std::function<void()> f, int p, size_t i) : func(std::move(f)), priority(p), id(i) {}
-    void operator()() {
-        if(func) {
-            func();
-        }
-    }
-};
-
-struct TaskCompare {
-    bool operator() (
-        const Task& a, const Task& b
-    ) const {
-        return a.priority < b.priority;
-    }
-};
 
 
 class ThreadPool {
 private:
-    //  Task生命周期管理
-    enum class TaskState {
-        pending,
-        Running,
-        Finished,
-        Failed
-    };
-
     std::mutex mutex;
     std::condition_variable not_full;
     std::condition_variable not_empty;
@@ -57,6 +29,8 @@ private:
     size_t max_queue_size;
     //  id记录
     std::atomic<size_t> task_id{0};
+    //  状态表
+    std::unordered_map<size_t, std::shared_ptr<TaskControl>> task_states;
 
 public:
     //  关闭方式
@@ -79,6 +53,9 @@ public:
 
     bool empty();
     bool full();
+
+    //  状态表查询窗口
+    TaskState get_task_state(size_t id);
 };
 
 template<typename F>
@@ -88,25 +65,24 @@ auto ThreadPool::submit(F&& f, int priority) {
         auto task = std::make_shared<std::packaged_task<return_type()>>
             (std::forward<F>(f));
 
-        auto result = task->get_future();
+        auto future = task->get_future();
 
+        auto control = std::make_shared<TaskControl>();
+
+        auto id = task_id++;
         {
-            std::unique_lock<std::mutex> lock(mutex);
+            std::lock_guard<std::mutex> lock(mutex);
+            task_states[id] = control;
 
-            not_full.wait(lock, [this]() {
-                return stop || tasks.size() < max_queue_size;
-            });
-
-            if(stop) {
-                throw std::runtime_error("ThreadPool stopped");
-            }
-
-            tasks.emplace([task]() {
-                (*task)();},
+            tasks.emplace(
+                id,
                 priority,
-                task_id++);
+                [task]() {
+                    (*task)();
+                },
+                control);
         }
         not_empty.notify_one();
 
-        return result;
+        return TaskHandle<return_type>(id, std::move(future), control);
     }

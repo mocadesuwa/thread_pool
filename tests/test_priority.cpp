@@ -1,27 +1,39 @@
 #include <iostream>
 #include <vector>
-#include <chrono>
+#include <future>
 
 #include "thread_pool.h"
 
 void test_priority() {
     ThreadPool pool(1, 100);
     //  占位任务
-    pool.submit([]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    });
+    std::promise<void> start;
 
-    std::vector<std::future<void>> futures;
-    for(int i = 0; i < 20; i++) {
-        futures.push_back(pool.submit(
-            [i]() {
-                std::cout << "execute task priority: " << i << "\n";
-            },i)
+    auto blocker = start.get_future();
+
+    auto first = pool.submit(
+        [&]() {
+            blocker.wait();
+        }
+    );
+
+    std::vector<TaskHandle<void>> handles;
+
+    for(int i = 0; i < 10; i++) {
+        handles.emplace_back(
+            pool.submit(
+                [i]() {
+                    std::cout << "execute priority: " << i << std::endl;
+                },i
+            )
         );
     }
 
-    for(auto& f : futures) {
-        f.get();
+    start.set_value();
+    first.wait();
+
+    for(auto& h : handles) {
+        h.wait();
     }
 
     std::cout << "test priority pass\n";
