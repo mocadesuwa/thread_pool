@@ -28,5 +28,29 @@
   "command": "/usr/bin/g++ -I/home/hao11/Event/thread_pool/include -g -std=c++17 -o tests/CMakeFiles/test_task_state.dir/test_task_state.cpp.o -c /home/hao11/Event/thread_pool/tests/test_task_state.cpp",
   "file": "/home/hao11/Event/thread_pool/tests/test_task_state.cpp",
   "output": "/home/hao11/Event/thread_pool/build/tests/CMakeFiles/test_task_state.dir/test_task_state.cpp.o"
+},
+{
+  "directory": "/home/hao11/Event/thread_pool/build",
+  "command": "/usr/bin/g++ -I/home/hao11/Event/thread_pool/include -g -std=c++17 -o tests/CMakeFiles/test_exception.dir/test_exception.cpp.o -c /home/hao11/Event/thread_pool/tests/test_exception.cpp",
+  "file": "/home/hao11/Event/thread_pool/tests/test_exception.cpp",
+  "output": "/home/hao11/Event/thread_pool/build/tests/CMakeFiles/test_exception.dir/test_exception.cpp.o"
+},
+{
+  "directory": "/home/hao11/Event/thread_pool/build",
+  "command": "/usr/bin/g++ -I/home/hao11/Event/thread_pool/include -g -std=c++17 -o tests/CMakeFiles/test_shutdown.dir/test_shutdown.cpp.o -c /home/hao11/Event/thread_pool/tests/test_shutdown.cpp",
+  "file": "/home/hao11/Event/thread_pool/tests/test_shutdown.cpp",
+  "output": "/home/hao11/Event/thread_pool/build/tests/CMakeFiles/test_shutdown.dir/test_shutdown.cpp.o"
+},
+{
+  "directory": "/home/hao11/Event/thread_pool/build",
+  "command": "/usr/bin/g++ -I/home/hao11/Event/thread_pool/include -g -std=c++17 -o tests/CMakeFiles/test_queue_size.dir/test_queue_size.cpp.o -c /home/hao11/Event/thread_pool/tests/test_queue_size.cpp",
+  "file": "/home/hao11/Event/thread_pool/tests/test_queue_size.cpp",
+  "output": "/home/hao11/Event/thread_pool/build/tests/CMakeFiles/test_queue_size.dir/test_queue_size.cpp.o"
+},
+{
+  "directory": "/home/hao11/Event/thread_pool/build",
+  "command": "/usr/bin/g++ -I/home/hao11/Event/thread_pool/include -g -std=c++17 -o tests/CMakeFiles/test_stress.dir/test_stress.cpp.o -c /home/hao11/Event/thread_pool/tests/test_stress.cpp",
+  "file": "/home/hao11/Event/thread_pool/tests/test_stress.cpp",
+  "output": "/home/hao11/Event/thread_pool/build/tests/CMakeFiles/test_stress.dir/test_stress.cpp.o"
 }
 ]

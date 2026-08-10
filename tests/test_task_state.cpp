@@ -16,7 +16,7 @@ void test_task_state() {
     //  1.
     auto state1 = handle.state();
 
-    std::cout << "state after submit "
+    std::cout << "state after submit: "
               << static_cast<int>(state1)
               << std::endl;
     assert(state1 == TaskState::Pending ||
@@ -27,7 +27,7 @@ void test_task_state() {
 
     auto state2 = handle.state();
 
-    std::cout << "state during execute"
+    std::cout << "state during execute: "
               << static_cast<int>(state2)
               << std::endl;
 
